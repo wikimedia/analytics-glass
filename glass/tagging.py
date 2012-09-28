@@ -11,8 +11,10 @@ def unpack(int):
 
 class Tag(object):
 
-    def __init__(self, key):
-        self.key = key
+    key_template = 'tag:%(entity)s:%(predicate)s'
+
+    def __init__(self, entity, predicate):
+        self.key = Tag.key_template % locals()
 
     def tag(self, item):
         self.__setitem__(item, 1)
@@ -29,7 +31,7 @@ class Tag(object):
     __contains__ = __getitem__ 
 
     def __setitem__(self, item, value):
-        r.bitset(self.key, item, int(value))
+        r.setbit(self.key, item, int(value))
 
     def __len__(self):
         return r.bitcount(self.key)

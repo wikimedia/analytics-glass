@@ -1,0 +1,6 @@
+[gerrit]
+host=gerrit.wikimedia.org
+port=29418
+project=analytics/glass.git
+defaultbranch=master
+defaultrebase=1

@@ -16,7 +16,7 @@
   optional arguments:
     -h, --help     show help message and exit
     --topic TOPIC  subscribe to topic (default: "")
-    --sid SID      set socket identity (default: process id)
+    --sid SID      set socket identity (default: host name)
 
 """
 import argparse

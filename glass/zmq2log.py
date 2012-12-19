@@ -42,7 +42,7 @@ class GzipTimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
                     subprocess.call(('gzip', src))
                     os.renames(src + '.gz', dst + '.gz')
         except:
-            logger.exception('Failed to archive logs')
+            logger.exception('Failed to archive logs.')
 
 
 #
@@ -63,7 +63,7 @@ args = parser.parse_args()
 
 # Configure log rotation
 logfile_handler = GzipTimedRotatingFileHandler(filename=args.destfile,
-        when='S', interval=10, encoding='utf-8', utc=True)
+        when='midnight', encoding='utf-8', utc=True)
 logfile_handler.setLevel(logging.INFO)
 
 # Configuring logging to stderr

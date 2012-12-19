@@ -3,70 +3,56 @@
 """
   zmq2log.py
   ----------
-  Log ZeroMQ traffic to log-rotated file.
+  Log a ZeroMQ PUB stream.
 
-  usage: zmq2log.py [-h] [--filter FILTER] publisher destfile
+  usage: zmq2log.py [-h] [--topic TOPIC] [--sid SID] publisher destfile
+
+  Log a ZeroMQ PUB stream.
 
   positional arguments:
-    publisher        publisher URI
-    destfile         write log to this file
+    publisher      publisher URI
+    destfile       write log to this file
 
   optional arguments:
-    -h, --help       show this help message and exit
-    --filter FILTER  subscription filter
+    -h, --help     show help message and exit
+    --topic TOPIC  subscribe to topic (default: "")
+    --sid SID      set socket identity (default: process id)
 
 """
 import argparse
 import logging
 import logging.handlers
-import os
-import subprocess
+import socket
 import zmq
 
 
-
-class GzipTimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
-    """
-    TimedRotatingFileHandler subclass that gzips logfiles and moves them
-    to ./archive.
-    """
-
-    def doRollover(self):
-        super(GzipTimedRotatingFileHandler, self).doRollover()
-        try:
-            dir, base = os.path.split(self.baseFilename)
-            for f in os.listdir(dir):
-                if f.startswith(base + '.'):
-                    src = os.path.join(dir, f)
-                    dst = os.path.join(dir, 'archive', f)
-                    subprocess.call(('gzip', src))
-                    os.renames(src + '.gz', dst + '.gz')
-        except:
-            logger.exception('Failed to archive logs.')
+hostname = socket.gethostname()
 
 
 #
 # Parse command-line args
 #
 
-parser = argparse.ArgumentParser(description='Log ZeroMQ traffic to disk')
-parser.add_argument('--filter', default='', help='subscription filter')
+parser = argparse.ArgumentParser(description='Log a ZeroMQ PUB stream.')
 parser.add_argument('publisher', help='publisher URI')
 parser.add_argument('destfile', help='write log to this file')
-args = parser.parse_args()
+parser.add_argument('--topic', default='',
+                    help='subscribe to topic (default: "")')
+parser.add_argument('--sid', default=hostname,
+                    help='set socket identity (default: host name)')
 
+args = parser.parse_args()
 
 
 #
 # Configure logging
 #
 
-# Configure log rotation
-logfile_handler = GzipTimedRotatingFileHandler(filename=args.destfile,
-        when='midnight', encoding='utf-8', utc=True)
+# Configure logging to file:
+logfile_handler = logging.handlers.WatchedFileHandler(filename=args.destfile)
 logfile_handler.setLevel(logging.INFO)
 
-# Configuring logging to stderr
+# Configure logging to stderr:
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(logging.Formatter('%(asctime)s\t%(message)s'))
 console_handler.setLevel(logging.DEBUG)  # Don't pollute log files with status
@@ -78,7 +64,6 @@ log.addHandler(console_handler)
 log.debug('Started. Logging to %s.' % args.destfile)
 
 
-
 #
 # Configure ZeroMQ Subscriber
 #
@@ -86,9 +71,9 @@ log.debug('Started. Logging to %s.' % args.destfile)
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
 socket.connect(args.publisher)
-socket.setsockopt(zmq.SUBSCRIBE, args.filter)
-log.debug('Connected to %s (filter: %s).' % (args.publisher, args.filter))
-
+socket.setsockopt(zmq.IDENTITY, args.sid.encode('utf8'))
+socket.setsockopt(zmq.SUBSCRIBE, args.topic.encode('utf8'))
+log.debug('Connected to %s/%s' % (args.publisher, args.topic))
 
 
 while 1:

@@ -19,8 +19,30 @@
 import argparse
 import logging
 import logging.handlers
+import os
+import subprocess
 import zmq
 
+
+
+class GzipTimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
+    """
+    TimedRotatingFileHandler subclass that gzips logfiles and moves them
+    to ./archive.
+    """
+
+    def doRollover(self):
+        super(GzipTimedRotatingFileHandler, self).doRollover()
+        try:
+            dir, base = os.path.split(self.baseFilename)
+            for f in os.listdir(dir):
+                if f.startswith(base + '.'):
+                    src = os.path.join(dir, f)
+                    dst = os.path.join(dir, 'archive', f)
+                    subprocess.call(('gzip', src))
+                    os.renames(src + '.gz', dst + '.gz')
+        except:
+            logger.exception('Failed to archive logs')
 
 
 #
@@ -40,8 +62,8 @@ args = parser.parse_args()
 #
 
 # Configure log rotation
-logfile_handler = logging.handlers.TimedRotatingFileHandler(
-        filename=args.destfile, when='midnight', encoding='utf-8', utc=True)
+logfile_handler = GzipTimedRotatingFileHandler(filename=args.destfile,
+        when='S', interval=10, encoding='utf-8', utc=True)
 logfile_handler.setLevel(logging.INFO)
 
 # Configuring logging to stderr

@@ -99,9 +99,9 @@ def get_schema(id):
 
 def http_get_schema(id):
     """Retrieve schema via HTTP."""
-    with urlopen(url % id) as req:
-        content = req.read(10240).decode('utf-8')
-        return json.loads(content)
+    req = urlopen(url % id)
+    content = req.read(10240).decode('utf-8')
+    return json.loads(content)
 
 
 def iter_loglines():
@@ -121,8 +121,20 @@ def iter_events():
             yield event
 
 
+# Configure logging
+log = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+log.setLevel(logging.DEBUG)
+log.addHandler(handler)
+
+
+# Configure ZMQ PUB
 context = zmq.Context()
 pub = context.socket(zmq.PUB)
 pub.bind('tcp://*:8484')
-for line in iter_events():
-    pub.send(json.dumps(line) + '\n')
+
+
+for event in iter_events():
+    j = json.dumps(event)
+    pub.send(j + '\n')
+    log.info(j)

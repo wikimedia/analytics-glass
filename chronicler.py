@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 import calendar
+import hashlib
 import json
 import logging
 import time
@@ -79,10 +80,10 @@ def parse_bits_line(line):
 
     e['meta'].update({
         'truncated' : not q.endswith(';'),
-        'origin'    : origin,
+        'origin'    : origin.split('.', 1)[0],
         'seqId'     : int(seq_id),
         'timestamp' : parse_ncsa_ts(timestamp),
-        'clientIp'  : client_ip,
+        'clientIp'  : hashlib.sha1(client_ip.encode('utf8')).hexdigest()
     })
 
     return e
@@ -100,7 +101,7 @@ def get_schema(id):
 def http_get_schema(id):
     """Retrieve schema via HTTP."""
     req = urlopen(url % id)
-    content = req.read(10240).decode('utf-8')
+    content = req.read(10240).decode('utf8')
     return json.loads(content)
 
 
@@ -115,7 +116,7 @@ def iter_loglines():
 
 def iter_events():
     for event in iter_loglines():
-        event = event.decode('utf-8')
+        event = event.decode('utf8')
         event = parse_bits_line(event)
         if event is not None:
             yield event

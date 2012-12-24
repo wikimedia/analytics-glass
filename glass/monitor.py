@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
-import zmq
-import logging
 import collections
+import logging
+import zmq
+
+
+ENDPOINT = 'tcp://localhost:8422'
 
 
 def get_logger():
@@ -19,7 +22,7 @@ def get_logger():
 def zsub(endpoint, topic=b''):
     context = zmq.Context.instance()
     sock = context.socket(zmq.SUB)
-    sock.connect('tcp://localhost:8422')
+    sock.connect(endpoint)
     sock.setsockopt(zmq.SUBSCRIBE, b'')
 
     while 1:
@@ -28,11 +31,11 @@ def zsub(endpoint, topic=b''):
 
 
 log = get_logger()
+lost = defaultdict(int)
 seqs = {}
-lost = collections.Counter()
 
 
-for line in zsub('tcp://localhost:8422'):
+for line in zsub(ENDPOINT):
 
     try:
         host, seq = line.split(' ', 3)[1:3]

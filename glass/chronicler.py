@@ -47,7 +47,7 @@ def parse_meta(object):
 
 def parse_qs(q):
     """Parse a query string."""
-    q = dict(parse_qsl(q.lstrip('?').rstrip(';')))
+    q = dict(parse_qsl(q.strip('?;')))
     meta = {}
     e = {}
     for k, v in q.items():
@@ -106,12 +106,12 @@ def http_get_schema(id):
 
 
 def iter_loglines():
-    context = zmq.Context()
+    context = zmq.Context.instance()
     sock = context.socket(zmq.SUB)
     sock.connect('tcp://localhost:8422')
     sock.setsockopt(zmq.SUBSCRIBE, b'')
-    for line in iter(sock.recv, ''):
-        yield line
+    while 1:
+        yield sock.recv()
 
 
 def iter_events():
@@ -122,20 +122,21 @@ def iter_events():
             yield event
 
 
-# Configure logging
-log = logging.getLogger(__name__)
-handler = logging.StreamHandler()
-log.setLevel(logging.DEBUG)
-log.addHandler(handler)
+def get_logger():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+
+    stderr_handler = logging.StreamHandler()
+    stderr_handler.setLevel(logging.DEBUG)
+    logger.addHandler(stderr_handler)
+
+    return logger
 
 
 # Configure ZMQ PUB
-context = zmq.Context()
+context = zmq.Context.instance()
 pub = context.socket(zmq.PUB)
 pub.bind('tcp://*:8484')
 
-
 for event in iter_events():
-    j = json.dumps(event)
-    pub.send(j + '\n')
-    log.info(j)
+    pub.send_json(event)

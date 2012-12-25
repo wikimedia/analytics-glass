@@ -133,10 +133,10 @@ def get_logger():
     return logger
 
 
-# Configure ZMQ PUB
-context = zmq.Context.instance()
-pub = context.socket(zmq.PUB)
-pub.bind('tcp://*:8484')
+if __name__ == '__main__':
+    context = zmq.Context.instance()
+    pub = context.socket(zmq.PUB)
+    pub.bind('tcp://*:8484')
 
-for event in iter_events():
-    pub.send_json(event)
+    for event in iter_events():
+        pub.send_json(event)

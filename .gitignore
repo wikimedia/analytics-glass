@@ -42,3 +42,4 @@ parts
 pip-log.txt
 sdist
 var
+config.ini

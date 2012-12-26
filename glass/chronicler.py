@@ -13,6 +13,8 @@ import jsonschema
 import zmq
 
 
+json = zmq.utils.jsonapi
+
 if sys.version_info[0] >= 3:
     items = operator.methodcaller('items')
     from urllib.parse import parse_qsl
@@ -144,4 +146,4 @@ if __name__ == '__main__':
     pub.bind(b'tcp://*:8484')
 
     for event in iter_events():
-        pub.send_json(event)
+        pub.send_unicode(json.dumps(event) + '\n')

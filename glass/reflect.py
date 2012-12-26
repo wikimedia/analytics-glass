@@ -8,9 +8,7 @@ import zmq
 import ConfigParser
 
 from sqlalchemy import *
-from sqlalchemy.schema import CreateTable
-from sqlalchemy.exc import (DatabaseError, InvalidRequestError,
-                            NoSuchTableError, SQLAlchemyError)
+from sqlalchemy.exc import NoSuchTableError, SQLAlchemyError
 
 from chronicler import get_schema
 

@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
+from __future__ import division, print_function, unicode_literals
+
 import calendar
 import hashlib
-import json
 import logging
+import operator
+import sys
 import time
 
 import jsonschema
 import zmq
 
-try:
-    from urllib.parse import parse_qsl, urlencode
+
+if sys.version_info[0] >= 3:
+    items = operator.methodcaller('items')
+    from urllib.parse import parse_qsl
     from urllib.request import urlopen
-except ImportError:
+else:
+    items = operator.methodcaller('iteritems')
     from urlparse import parse_qsl
-    from urllib import urlencode
     from urllib2 import urlopen
 
-
+json = zmq.utils.jsonapi
 
 meta_readable = dict(_rv='revision', _id='schema', _ok='valid', _db='site')
 url = 'http://meta.wikimedia.org/w/index.php?action=raw&oldid=%d'
@@ -36,8 +41,8 @@ casters = {
 
 def typecast(object, schema):
     properties = schema.get('properties', {})
-    types = {k: v.get('type') for k, v in properties.items()}
-    return {k: casters[types.get(k, 'string')](v) for k, v in object.items()}
+    types = {k: v.get('type') for k, v in items(properties)}
+    return {k: casters[types.get(k, 'string')](v) for k, v in items(object)}
 
 
 def parse_meta(object):
@@ -50,7 +55,7 @@ def parse_qs(q):
     q = dict(parse_qsl(q.strip('?;')))
     meta = {}
     e = {}
-    for k, v in q.items():
+    for k, v in items(q):
         if k.startswith('_'):
             meta[k] = v
         else:
@@ -61,7 +66,7 @@ def parse_qs(q):
     e = typecast(e, schema)
     jsonschema.validate(e, schema)
 
-    e['meta'] = {meta_readable.get(k, k): v for k, v in meta.items()}
+    e['meta'] = {meta_readable.get(k, k): v for k, v in items(meta)}
     return e
 
 
@@ -108,7 +113,7 @@ def http_get_schema(id):
 def iter_loglines():
     context = zmq.Context.instance()
     sock = context.socket(zmq.SUB)
-    sock.connect('tcp://localhost:8422')
+    sock.connect(b'tcp://localhost:8422')
     sock.setsockopt(zmq.SUBSCRIBE, b'')
     while 1:
         yield sock.recv()
@@ -136,7 +141,7 @@ def get_logger():
 if __name__ == '__main__':
     context = zmq.Context.instance()
     pub = context.socket(zmq.PUB)
-    pub.bind('tcp://*:8484')
+    pub.bind(b'tcp://*:8484')
 
     for event in iter_events():
         pub.send_json(event)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from gevent import server, joinall
+from gevent import server
 from gevent_zeromq import zmq
 
 
@@ -19,8 +19,8 @@ class DatagramRouter(server.DatagramServer):
 
 
 if __name__ == '__main__':
-    servers = [DatagramRouter(port) for port in (8421, 8422)]
-    for server in servers:
-        server.start()
-    for server in servers:
-        server.serve_forever()
+    routers = [DatagramRouter(port) for port in (8421, 8422)]
+    for router in routers:
+        router.start()
+    for router in routers:
+        router.serve_forever()

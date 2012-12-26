@@ -31,7 +31,7 @@ def zsub(endpoint, topic=b''):
 
 
 log = get_logger()
-lost = defaultdict(int)
+lost = collections.defaultdict(int)
 seqs = {}
 
 

@@ -71,8 +71,12 @@ def store_event(event):
     for key in event:
         if 'timestamp' in key:
             event[key] = datetime.fromtimestamp(int(event[key]))
-    table = get_table(event['_schema'], event['_revision'])
-    return table.insert(values=event).execute()
+    try:
+        table = get_table(event['_schema'], event['_revision'])
+    except:
+        logging.exception('Unable to get or set suitable table')
+    else:
+        table.insert(values=event).execute()
 
 
 context = zmq.Context()

@@ -101,7 +101,8 @@ def get_schema(id):
     schema = schemas.get(id)
     if schema is None:
         schema = http_get_schema(id)
-        schemas[id] = schema
+        if schema is not None:
+            schemas[id] = schema
     return schema
 
 
@@ -109,7 +110,9 @@ def http_get_schema(id):
     """Retrieve schema via HTTP."""
     req = urlopen(url % id)
     content = req.read(10240).decode('utf8')
-    return json.loads(content)
+    schema = json.loads(content)
+    if isinstance(schema, dict):
+        return schema
 
 
 def iter_loglines():

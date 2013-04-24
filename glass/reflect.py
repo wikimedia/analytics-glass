@@ -67,7 +67,7 @@ def create_table(name, rev):
 
 
 def store_event(event):
-    event.update({('_' + k):v for k, v in event.pop('meta').items()})
+    event.update({('_' + k): v for k, v in event.pop('meta').items()})
     for key in event:
         if 'timestamp' in key:
             event[key] = datetime.fromtimestamp(int(event[key]))

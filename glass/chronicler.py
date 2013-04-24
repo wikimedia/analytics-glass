@@ -40,7 +40,6 @@ casters = {
 }
 
 
-
 def typecast(object, schema):
     properties = schema.get('properties', {})
     types = {k: v.get('type') for k, v in items(properties)}

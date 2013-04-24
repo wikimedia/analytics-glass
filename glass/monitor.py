@@ -29,7 +29,6 @@ def zsub(endpoint, topic=b''):
         yield sock.recv()
 
 
-
 log = get_logger()
 lost = collections.defaultdict(int)
 seqs = {}
